@@ -9,10 +9,15 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: "8.10.2" }
+      - name: Unpack zip
+        run: |
+          for z in $(find . -maxdepth 2 -name '*.zip' -not -path './.git/*'); do unzip -oq "$z" -d _unzipped; done
+          find . -maxdepth 3 -not -path './.git/*' | head -40
       - name: Build
         run: |
-          DIR=$(dirname "$(find . -name build.gradle -not -path './.git/*' | head -n1)")
-          cd "$DIR"
+          F=$(find . -name build.gradle -not -path './.git/*' | head -n1)
+          if [ -z "$F" ]; then echo "No build.gradle found. Upload the zip or project files."; exit 1; fi
+          cd "$(dirname "$F")"
           gradle build --no-daemon
       - uses: actions/upload-artifact@v4
         with:
